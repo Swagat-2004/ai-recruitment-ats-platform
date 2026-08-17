@@ -10,10 +10,16 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService) {
+
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     public User findUserByEmail(String email) {
@@ -25,13 +31,19 @@ public class AuthService {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 
-    public boolean login(LoginRequest request) {
+    public String login(LoginRequest request) {
 
-    User user = findUserByEmail(request.getEmail());
+        User user = findUserByEmail(request.getEmail());
 
-        return checkPassword(
+        boolean passwordCorrect = checkPassword(
             request.getPassword(),
             user.getPassword()
         );
+
+        if (!passwordCorrect) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        return jwtService.generateToken(user.getEmail());
     }
 }

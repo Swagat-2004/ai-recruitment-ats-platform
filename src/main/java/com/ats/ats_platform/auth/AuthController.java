@@ -16,12 +16,8 @@ public class AuthController {
     @PostMapping("/auth/login")
     public LoginResponse login(@RequestBody LoginRequest request) {
 
-        boolean success = authService.login(request);
+       String token = authService.login(request);
 
-        if (!success) {
-            throw new RuntimeException("Invalid email or password");
-        }
-
-        return new LoginResponse("LOGIN_SUCCESS");
+       return new LoginResponse(token);
     }
 }
