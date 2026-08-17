@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import com.ats.ats_platform.repository.UserRepository;
 import com.ats.ats_platform.dto.UserResponse;
 import com.ats.ats_platform.entity.User;
+import com.ats.ats_platform.exception.EmailAlreadyExistsException;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -13,13 +15,18 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-    this.userRepository = userRepository;
-    this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
 }
 
     public User saveUser(User user) {
-    user.setPassword(passwordEncoder.encode(user.getPassword()));
-    return userRepository.save(user);
+
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new EmailAlreadyExistsException("Email already registered");
+}
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
 }
 
     public UserResponse createUserResponse(User user) {
@@ -31,5 +38,11 @@ public class UserService {
         response.setRole(user.getRole().name());
 
         return response;
+}
+   public List<UserResponse> getAllUsers() {
+        return userRepository.findAll()
+            .stream()
+            .map(this::createUserResponse)
+            .toList();
 }
 }
