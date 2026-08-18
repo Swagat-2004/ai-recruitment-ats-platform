@@ -3,6 +3,7 @@ package com.ats.ats_platform.controller;
 import com.ats.ats_platform.entity.Job;
 import com.ats.ats_platform.service.JobService;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/jobs")
@@ -17,5 +18,10 @@ public class JobController {
     @PostMapping
     public Job createJob(@RequestBody Job job) {
         return jobService.createJob(job);
+    }
+
+    @GetMapping
+    public List<Job> getAllJobs() {
+        return jobService.getAllJobs();
     }
 }

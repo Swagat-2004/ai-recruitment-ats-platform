@@ -3,6 +3,7 @@ package com.ats.ats_platform.service;
 import com.ats.ats_platform.entity.Job;
 import com.ats.ats_platform.repository.JobRepository;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class JobService {
@@ -16,5 +17,9 @@ public class JobService {
     public Job createJob(Job job) {
         job.setCreatedAt(java.time.LocalDateTime.now());
         return jobRepository.save(job);
-}
+    }
+
+    public List<Job> getAllJobs() {
+        return jobRepository.findAll();
+    }
 }
