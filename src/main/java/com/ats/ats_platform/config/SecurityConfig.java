@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/users").permitAll()
                 .requestMatchers("/auth/login").permitAll()
                 .requestMatchers("/users").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/jobs").hasRole("RECRUITER")
                 .anyRequest().authenticated()
             );
         
