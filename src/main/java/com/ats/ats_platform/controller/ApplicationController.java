@@ -10,6 +10,7 @@ import com.ats.ats_platform.repository.JobRepository;
 import com.ats.ats_platform.repository.UserRepository;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import com.ats.ats_platform.dto.ApplicationResponse;
 
 @RestController
 @RequestMapping("/applications")
@@ -31,7 +32,7 @@ public ApplicationController(
 
 
     @PostMapping
-public Application applyForJob(
+public ApplicationResponse applyForJob(
         @RequestParam Long candidateId,
         @RequestParam Long jobId) {
 
@@ -41,6 +42,15 @@ public Application applyForJob(
     Job job = jobRepository.findById(jobId)
             .orElseThrow(() -> new RuntimeException("Job not found"));
 
-    return applicationService.applyForJob(candidate, job);
+    Application application = applicationService.applyForJob(candidate, job);
+
+ApplicationResponse response = new ApplicationResponse();
+
+response.setId(application.getId());
+response.setCandidateId(application.getCandidate().getId());
+response.setJobId(application.getJob().getId());
+response.setStatus(application.getStatus().name());
+
+return response;
 }
-}
+}   

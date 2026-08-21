@@ -21,6 +21,10 @@ public class Application {
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status;
 
+    public Long getId() {
+        return id;
+    }
+
     public User getCandidate() {
         return candidate;
     }
