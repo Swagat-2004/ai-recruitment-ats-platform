@@ -83,4 +83,28 @@ public class ApplicationService {
 
         return response;
     }
+    public List<ApplicationResponse> getApplicationsByCandidate(Long candidateId) {
+
+    List<Application> applications =
+            applicationRepository.findByCandidateId(candidateId);
+
+    return applications.stream()
+            .map(application -> {
+                ApplicationResponse response = new ApplicationResponse();
+
+                response.setId(application.getId());
+                response.setCandidateId(
+                        application.getCandidate().getId()
+                );
+                response.setJobId(
+                        application.getJob().getId()
+                );
+                response.setStatus(
+                        application.getStatus().name()
+                );
+
+                return response;
+            })
+            .toList();
+}
 }

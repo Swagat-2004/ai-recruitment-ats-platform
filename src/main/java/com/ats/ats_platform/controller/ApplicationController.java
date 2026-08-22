@@ -9,7 +9,7 @@ import com.ats.ats_platform.repository.JobRepository;
 import com.ats.ats_platform.repository.UserRepository;
 import com.ats.ats_platform.service.ApplicationService;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.core.Authentication;
 import java.util.List;
 
 @RestController
@@ -79,4 +79,19 @@ public class ApplicationController {
                 status
         );
     }
+
+    @GetMapping("/my")
+        public List<ApplicationResponse> getMyApplications(
+        Authentication authentication) {
+
+        String email = authentication.getName();
+
+        User candidate = userRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new RuntimeException("Candidate not found"));
+
+        return applicationService.getApplicationsByCandidate(
+            candidate.getId()
+    );
+}
 }
