@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .requestMatchers("/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/jobs").hasRole("RECRUITER")
                 .requestMatchers(HttpMethod.POST, "/applications").hasRole("CANDIDATE")
+                .requestMatchers(HttpMethod.PUT, "/applications/*/status").hasRole("RECRUITER")
                 .anyRequest().authenticated()
             );
 

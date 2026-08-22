@@ -2,11 +2,12 @@ package com.ats.ats_platform.controller;
 
 import com.ats.ats_platform.dto.ApplicationResponse;
 import com.ats.ats_platform.entity.Application;
+import com.ats.ats_platform.entity.ApplicationStatus;
 import com.ats.ats_platform.entity.Job;
 import com.ats.ats_platform.entity.User;
-import com.ats.ats_platform.service.ApplicationService;
 import com.ats.ats_platform.repository.JobRepository;
 import com.ats.ats_platform.repository.UserRepository;
+import com.ats.ats_platform.service.ApplicationService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -48,9 +49,15 @@ public class ApplicationController {
         ApplicationResponse response = new ApplicationResponse();
 
         response.setId(application.getId());
-        response.setCandidateId(application.getCandidate().getId());
-        response.setJobId(application.getJob().getId());
-        response.setStatus(application.getStatus().name());
+        response.setCandidateId(
+                application.getCandidate().getId()
+        );
+        response.setJobId(
+                application.getJob().getId()
+        );
+        response.setStatus(
+                application.getStatus().name()
+        );
 
         return response;
     }
@@ -60,5 +67,16 @@ public class ApplicationController {
             @PathVariable Long jobId) {
 
         return applicationService.getApplicationsByJob(jobId);
+    }
+
+    @PutMapping("/{applicationId}/status")
+    public ApplicationResponse updateApplicationStatus(
+            @PathVariable Long applicationId,
+            @RequestParam ApplicationStatus status) {
+
+        return applicationService.updateApplicationStatus(
+                applicationId,
+                status
+        );
     }
 }

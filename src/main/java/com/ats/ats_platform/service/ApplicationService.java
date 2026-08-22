@@ -40,12 +40,47 @@ public class ApplicationService {
                     ApplicationResponse response = new ApplicationResponse();
 
                     response.setId(application.getId());
-                    response.setCandidateId(application.getCandidate().getId());
-                    response.setJobId(application.getJob().getId());
-                    response.setStatus(application.getStatus().name());
+                    response.setCandidateId(
+                            application.getCandidate().getId()
+                    );
+                    response.setJobId(
+                            application.getJob().getId()
+                    );
+                    response.setStatus(
+                            application.getStatus().name()
+                    );
 
                     return response;
                 })
                 .toList();
+    }
+
+    public ApplicationResponse updateApplicationStatus(
+            Long applicationId,
+            ApplicationStatus status) {
+
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() ->
+                        new RuntimeException("Application not found"));
+
+        application.setStatus(status);
+
+        Application updatedApplication =
+                applicationRepository.save(application);
+
+        ApplicationResponse response = new ApplicationResponse();
+
+        response.setId(updatedApplication.getId());
+        response.setCandidateId(
+                updatedApplication.getCandidate().getId()
+        );
+        response.setJobId(
+                updatedApplication.getJob().getId()
+        );
+        response.setStatus(
+                updatedApplication.getStatus().name()
+        );
+
+        return response;
     }
 }
