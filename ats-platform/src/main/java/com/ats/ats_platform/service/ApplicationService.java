@@ -7,6 +7,7 @@ import com.ats.ats_platform.entity.Job;
 import com.ats.ats_platform.entity.User;
 import com.ats.ats_platform.repository.ApplicationRepository;
 import org.springframework.stereotype.Service;
+import com.ats.ats_platform.exception.DuplicateApplicationException;
 
 import java.util.List;
 
@@ -15,11 +16,25 @@ public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
 
-    public ApplicationService(ApplicationRepository applicationRepository) {
+    public ApplicationService(
+            ApplicationRepository applicationRepository) {
+
         this.applicationRepository = applicationRepository;
     }
 
     public Application applyForJob(User candidate, Job job) {
+
+        boolean alreadyApplied =
+                applicationRepository.existsByCandidateIdAndJobId(
+                        candidate.getId(),
+                        job.getId()
+                );
+
+        if (alreadyApplied) {
+                throw new DuplicateApplicationException(
+                "You have already applied for this job"
+                );
+        }
 
         Application application = new Application();
 
@@ -30,22 +45,59 @@ public class ApplicationService {
         return applicationRepository.save(application);
     }
 
-    public List<ApplicationResponse> getApplicationsByJob(Long jobId) {
+    public List<ApplicationResponse> getApplicationsByJob(
+            Long jobId) {
 
         List<Application> applications =
                 applicationRepository.findByJobId(jobId);
 
         return applications.stream()
                 .map(application -> {
-                    ApplicationResponse response = new ApplicationResponse();
+
+                    ApplicationResponse response =
+                            new ApplicationResponse();
 
                     response.setId(application.getId());
+
                     response.setCandidateId(
                             application.getCandidate().getId()
                     );
+
                     response.setJobId(
                             application.getJob().getId()
                     );
+
+                    response.setStatus(
+                            application.getStatus().name()
+                    );
+
+                    return response;
+                })
+                .toList();
+    }
+
+    public List<ApplicationResponse> getApplicationsByCandidate(
+            Long candidateId) {
+
+        List<Application> applications =
+                applicationRepository.findByCandidateId(candidateId);
+
+        return applications.stream()
+                .map(application -> {
+
+                    ApplicationResponse response =
+                            new ApplicationResponse();
+
+                    response.setId(application.getId());
+
+                    response.setCandidateId(
+                            application.getCandidate().getId()
+                    );
+
+                    response.setJobId(
+                            application.getJob().getId()
+                    );
+
                     response.setStatus(
                             application.getStatus().name()
                     );
@@ -59,52 +111,35 @@ public class ApplicationService {
             Long applicationId,
             ApplicationStatus status) {
 
-        Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() ->
-                        new RuntimeException("Application not found"));
+        Application application =
+                applicationRepository.findById(applicationId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Application not found"
+                                ));
 
         application.setStatus(status);
 
         Application updatedApplication =
                 applicationRepository.save(application);
 
-        ApplicationResponse response = new ApplicationResponse();
+        ApplicationResponse response =
+                new ApplicationResponse();
 
         response.setId(updatedApplication.getId());
+
         response.setCandidateId(
                 updatedApplication.getCandidate().getId()
         );
+
         response.setJobId(
                 updatedApplication.getJob().getId()
         );
+
         response.setStatus(
                 updatedApplication.getStatus().name()
         );
 
         return response;
     }
-    public List<ApplicationResponse> getApplicationsByCandidate(Long candidateId) {
-
-    List<Application> applications =
-            applicationRepository.findByCandidateId(candidateId);
-
-    return applications.stream()
-            .map(application -> {
-                ApplicationResponse response = new ApplicationResponse();
-
-                response.setId(application.getId());
-                response.setCandidateId(
-                        application.getCandidate().getId()
-                );
-                response.setJobId(
-                        application.getJob().getId()
-                );
-                response.setStatus(
-                        application.getStatus().name()
-                );
-
-                return response;
-            })
-            .toList();
-}
 }

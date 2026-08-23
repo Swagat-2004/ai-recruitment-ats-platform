@@ -10,7 +10,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public String handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+    public String handleEmailAlreadyExists(
+            EmailAlreadyExistsException ex) {
+
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(DuplicateApplicationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String handleDuplicateApplication(
+            DuplicateApplicationException ex) {
+
         return ex.getMessage();
     }
 }

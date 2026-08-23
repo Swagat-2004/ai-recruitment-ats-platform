@@ -8,8 +8,9 @@ import com.ats.ats_platform.entity.User;
 import com.ats.ats_platform.repository.JobRepository;
 import com.ats.ats_platform.repository.UserRepository;
 import com.ats.ats_platform.service.ApplicationService;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -32,10 +33,12 @@ public class ApplicationController {
 
     @PostMapping
     public ApplicationResponse applyForJob(
-            @RequestParam Long candidateId,
-            @RequestParam Long jobId) {
+            @RequestParam Long jobId,
+            Authentication authentication) {
 
-        User candidate = userRepository.findById(candidateId)
+        String email = authentication.getName();
+
+        User candidate = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new RuntimeException("Candidate not found"));
 
@@ -49,12 +52,15 @@ public class ApplicationController {
         ApplicationResponse response = new ApplicationResponse();
 
         response.setId(application.getId());
+
         response.setCandidateId(
                 application.getCandidate().getId()
         );
+
         response.setJobId(
                 application.getJob().getId()
         );
+
         response.setStatus(
                 application.getStatus().name()
         );
@@ -81,17 +87,17 @@ public class ApplicationController {
     }
 
     @GetMapping("/my")
-        public List<ApplicationResponse> getMyApplications(
-        Authentication authentication) {
+    public List<ApplicationResponse> getMyApplications(
+            Authentication authentication) {
 
         String email = authentication.getName();
 
         User candidate = userRepository.findByEmail(email)
-            .orElseThrow(() ->
-                    new RuntimeException("Candidate not found"));
+                .orElseThrow(() ->
+                        new RuntimeException("Candidate not found"));
 
         return applicationService.getApplicationsByCandidate(
-            candidate.getId()
-    );
-}
+                candidate.getId()
+        );
+    }
 }
