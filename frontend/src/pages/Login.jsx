@@ -1,14 +1,21 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { login } from "../services/api";
 
 function Login() {
 
+    const navigate = useNavigate();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
+
+        setMessage("");
+        setLoading(true);
 
         try {
             const data = await login(email, password);
@@ -16,52 +23,79 @@ function Login() {
             localStorage.setItem("token", data.token);
 
             setMessage("Login successful!");
+
+            // For now, send candidates to the candidate dashboard.
+            navigate("/candidate");
+
         } catch (error) {
             setMessage(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div>
-            <h1>ATS Login</h1>
+        <div className="login-page">
 
-            <form onSubmit={handleLogin}>
+            <div className="login-card">
 
-                <div>
-                    <label>Email</label>
-                    <br />
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email"
-                        required
-                    />
-                </div>
+                <h1>ATS Platform</h1>
 
-                <br />
+                <h2>Welcome Back</h2>
 
-                <div>
-                    <label>Password</label>
-                    <br />
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
-                        required
-                    />
-                </div>
+                <p>Login to your account</p>
 
-                <br />
+                <form onSubmit={handleLogin}>
 
-                <button type="submit">
-                    Login
-                </button>
+                    <div>
+                        <label>Email</label>
 
-            </form>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter your email"
+                            required
+                        />
+                    </div>
 
-            {message && <p>{message}</p>}
+                    <div>
+                        <label>Password</label>
+
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter your password"
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                    >
+                        {loading ? "Logging in..." : "Login"}
+                    </button>
+
+                </form>
+
+                {message && (
+                    <p>{message}</p>
+                )}
+
+                <p>
+                    Don't have an account?{" "}
+                    <button
+                        type="button"
+                        onClick={() => navigate("/register")}
+                    >
+                        Register
+                    </button>
+                </p>
+
+            </div>
+
         </div>
     );
 }
