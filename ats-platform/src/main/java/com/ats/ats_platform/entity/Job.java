@@ -23,6 +23,13 @@ public class Job {
 
     private LocalDateTime createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recruiter_id", nullable = false)
+    private User recruiter;
+
+    public Job() {
+    }
+
     public Long getId() {
         return id;
     }
@@ -75,6 +82,11 @@ public class Job {
         this.createdAt = createdAt;
     }
 
-    public Job() {
+    public User getRecruiter() {
+        return recruiter;
+    }
+
+    public void setRecruiter(User recruiter) {
+        this.recruiter = recruiter;
     }
 }

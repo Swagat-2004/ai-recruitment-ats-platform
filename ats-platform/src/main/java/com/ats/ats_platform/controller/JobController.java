@@ -1,8 +1,11 @@
 package com.ats.ats_platform.controller;
 
+import com.ats.ats_platform.dto.JobResponse;
 import com.ats.ats_platform.entity.Job;
 import com.ats.ats_platform.service.JobService;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -16,12 +19,21 @@ public class JobController {
     }
 
     @PostMapping
-    public Job createJob(@RequestBody Job job) {
-        return jobService.createJob(job);
+    public JobResponse createJob(
+            @RequestBody Job job,
+            Authentication authentication) {
+
+        String recruiterEmail = authentication.getName();
+
+        return jobService.createJob(
+                job,
+                recruiterEmail
+        );
     }
 
     @GetMapping
-    public List<Job> getAllJobs() {
+    public List<JobResponse> getAllJobs() {
+
         return jobService.getAllJobs();
     }
 }
