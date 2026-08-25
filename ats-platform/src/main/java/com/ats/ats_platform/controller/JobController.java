@@ -31,9 +31,17 @@ public class JobController {
         );
     }
 
-    @GetMapping
-    public List<JobResponse> getAllJobs() {
+   @GetMapping
+public List<JobResponse> getAllJobs() {
+    return jobService.getAllJobs();
+}
 
-        return jobService.getAllJobs();
-    }
+@GetMapping("/my")
+public List<JobResponse> getMyJobs(
+        Authentication authentication) {
+
+    String recruiterEmail = authentication.getName();
+
+    return jobService.getMyJobs(recruiterEmail);
+}
 }

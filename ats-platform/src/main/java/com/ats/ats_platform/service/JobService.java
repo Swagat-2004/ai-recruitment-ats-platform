@@ -48,6 +48,14 @@ public class JobService {
                 .toList();
     }
 
+    public List<JobResponse> getMyJobs(String recruiterEmail) {
+
+    return jobRepository.findByRecruiterEmail(recruiterEmail)
+            .stream()
+            .map(this::convertToResponse)
+            .toList();
+}
+
     private JobResponse convertToResponse(Job job) {
 
         JobResponse response = new JobResponse();
