@@ -94,6 +94,7 @@ function RecruiterDashboard() {
         }
     };
 
+    // Create Job
     const createJob = async (e) => {
 
         e.preventDefault();
@@ -143,8 +144,6 @@ function RecruiterDashboard() {
             const createdJob =
                 JSON.parse(responseText);
 
-            // Add the newly created job
-            // to the dashboard immediately
             setJobs((currentJobs) => [
                 ...currentJobs,
                 createdJob
@@ -175,6 +174,7 @@ function RecruiterDashboard() {
         }
     };
 
+    // Update application status
     const updateApplicationStatus = async (
         applicationId,
         status
@@ -218,8 +218,7 @@ function RecruiterDashboard() {
                 (currentApplications) =>
                     currentApplications.map(
                         (application) =>
-                            application.id ===
-                            applicationId
+                            application.id === applicationId
                                 ? updatedApplication
                                 : application
                     )
@@ -243,6 +242,30 @@ function RecruiterDashboard() {
         navigate("/login");
     };
 
+    // Dashboard statistics
+    const totalJobs = jobs.length;
+
+    const totalApplicants =
+        applications.length;
+
+    const shortlistedApplicants =
+        applications.filter(
+            (application) =>
+                application.status === "SHORTLISTED"
+        ).length;
+
+    const rejectedApplicants =
+        applications.filter(
+            (application) =>
+                application.status === "REJECTED"
+        ).length;
+
+    const pendingApplicants =
+        applications.filter(
+            (application) =>
+                application.status === "APPLIED"
+        ).length;
+
     if (loading) {
 
         return (
@@ -257,7 +280,7 @@ function RecruiterDashboard() {
     return (
         <div>
 
-            {/* Header */}
+            {/* ================= HEADER ================= */}
 
             <header>
 
@@ -273,7 +296,7 @@ function RecruiterDashboard() {
 
             <hr />
 
-            {/* Error */}
+            {/* ================= ERROR ================= */}
 
             {error && (
 
@@ -290,7 +313,73 @@ function RecruiterDashboard() {
                 </div>
             )}
 
-            {/* Create Job */}
+            {/* ================= DASHBOARD OVERVIEW ================= */}
+
+            <section>
+
+                <h2>
+                    Dashboard Overview
+                </h2>
+
+                <div>
+
+                    <div>
+                        <h3>
+                            {totalJobs}
+                        </h3>
+
+                        <p>
+                            Total Jobs
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3>
+                            {totalApplicants}
+                        </h3>
+
+                        <p>
+                            Total Applicants
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3>
+                            {pendingApplicants}
+                        </h3>
+
+                        <p>
+                            Pending
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3>
+                            {shortlistedApplicants}
+                        </h3>
+
+                        <p>
+                            Shortlisted
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3>
+                            {rejectedApplicants}
+                        </h3>
+
+                        <p>
+                            Rejected
+                        </p>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <hr />
+
+            {/* ================= CREATE JOB ================= */}
 
             <section>
 
@@ -452,7 +541,7 @@ function RecruiterDashboard() {
 
             <hr />
 
-            {/* My Jobs */}
+            {/* ================= MY JOBS ================= */}
 
             <section>
 
@@ -509,7 +598,7 @@ function RecruiterDashboard() {
 
             <hr />
 
-            {/* Applicants */}
+            {/* ================= APPLICANTS ================= */}
 
             <section>
 
