@@ -18,19 +18,49 @@ function Login() {
         setLoading(true);
 
         try {
+
             const data = await login(email, password);
 
-            localStorage.setItem("token", data.token);
+            const token = data.token;
+
+            localStorage.setItem("token", token);
+
+            // Decode JWT payload
+            const payload = JSON.parse(
+                atob(token.split(".")[1])
+            );
+
+            const role = payload.role;
 
             setMessage("Login successful!");
 
-            // For now, send candidates to the candidate dashboard.
-            navigate("/candidate");
+            if (role === "RECRUITER") {
+
+                navigate("/recruiter");
+
+            } else if (role === "CANDIDATE") {
+
+                navigate("/candidate");
+
+            } else if (role === "ADMIN") {
+
+                // Admin dashboard will be added later
+                navigate("/");
+
+            } else {
+
+                setMessage("Unknown user role");
+
+            }
 
         } catch (error) {
+
             setMessage(error.message);
+
         } finally {
+
             setLoading(false);
+
         }
     };
 
@@ -48,34 +78,44 @@ function Login() {
                 <form onSubmit={handleLogin}>
 
                     <div>
+
                         <label>Email</label>
 
                         <input
                             type="email"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) =>
+                                setEmail(e.target.value)
+                            }
                             placeholder="Enter your email"
                             required
                         />
+
                     </div>
 
                     <div>
+
                         <label>Password</label>
 
                         <input
                             type="password"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) =>
+                                setPassword(e.target.value)
+                            }
                             placeholder="Enter your password"
                             required
                         />
+
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
                     >
-                        {loading ? "Logging in..." : "Login"}
+                        {loading
+                            ? "Logging in..."
+                            : "Login"}
                     </button>
 
                 </form>
@@ -86,12 +126,16 @@ function Login() {
 
                 <p>
                     Don't have an account?{" "}
+
                     <button
                         type="button"
-                        onClick={() => navigate("/register")}
+                        onClick={() =>
+                            navigate("/register")
+                        }
                     >
                         Register
                     </button>
+
                 </p>
 
             </div>
