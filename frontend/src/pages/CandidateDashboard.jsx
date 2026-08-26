@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function CandidateDashboard() {
+
     const navigate = useNavigate();
 
     const [jobs, setJobs] = useState([]);
     const [applications, setApplications] = useState([]);
+
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
     const [applyingJobId, setApplyingJobId] = useState(null);
 
     useEffect(() => {
@@ -14,9 +17,18 @@ function CandidateDashboard() {
     }, []);
 
     const loadDashboard = async () => {
+
         const token = localStorage.getItem("token");
 
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+
         try {
+
+            setError("");
+
             // Get available jobs
             const jobsResponse = await fetch(
                 "http://localhost:8080/jobs",
@@ -28,12 +40,15 @@ function CandidateDashboard() {
             );
 
             if (!jobsResponse.ok) {
-                throw new Error("Failed to load jobs");
+                throw new Error(
+                    "Failed to load jobs"
+                );
             }
 
-            const jobsData = await jobsResponse.json();
+            const jobsData =
+                await jobsResponse.json();
 
-            // Get candidate's applications
+            // Get candidate applications
             const applicationsResponse = await fetch(
                 "http://localhost:8080/applications/my",
                 {
@@ -44,7 +59,9 @@ function CandidateDashboard() {
             );
 
             if (!applicationsResponse.ok) {
-                throw new Error("Failed to load applications");
+                throw new Error(
+                    "Failed to load applications"
+                );
             }
 
             const applicationsData =
@@ -54,88 +71,140 @@ function CandidateDashboard() {
             setApplications(applicationsData);
 
         } catch (error) {
-            console.error("Dashboard error:", error);
 
-            if (
-                error.message === "Failed to load jobs" ||
-                error.message === "Failed to load applications"
-            ) {
-                alert(error.message);
-            }
+            console.error(
+                "Candidate dashboard error:",
+                error
+            );
+
+            setError(error.message);
 
         } finally {
+
             setLoading(false);
         }
     };
 
     const hasApplied = (jobId) => {
+
         return applications.some(
             (application) =>
                 application.jobId === jobId
         );
     };
 
+    const getApplicationForJob = (jobId) => {
+
+        return applications.find(
+            (application) =>
+                application.jobId === jobId
+        );
+    };
+
     const applyForJob = async (jobId) => {
-        // Prevent duplicate request from frontend
+
         if (hasApplied(jobId)) {
-            alert("You have already applied for this job");
+
+            alert(
+                "You have already applied for this job"
+            );
+
             return;
         }
 
         const token = localStorage.getItem("token");
 
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+
         setApplyingJobId(jobId);
 
         try {
+
             const response = await fetch(
                 `http://localhost:8080/applications?jobId=${jobId}`,
                 {
                     method: "POST",
+
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 }
             );
 
-            if (!response.ok) {
-                const errorText = await response.text();
+            const responseText =
+                await response.text();
 
-                if (response.status === 409) {
-                    throw new Error(
-                        errorText ||
-                        "You have already applied for this job"
-                    );
-                }
+            if (!response.ok) {
 
                 throw new Error(
-                    errorText ||
+                    responseText ||
                     "Failed to apply for job"
                 );
             }
 
-            alert("Application submitted successfully!");
+            alert(
+                "Application submitted successfully!"
+            );
 
             await loadDashboard();
 
         } catch (error) {
-            console.error("Application error:", error);
+
+            console.error(
+                "Application error:",
+                error
+            );
 
             alert(error.message);
 
         } finally {
+
             setApplyingJobId(null);
         }
     };
 
     const logout = () => {
+
         localStorage.removeItem("token");
+
         navigate("/login");
     };
 
+    // Dashboard statistics
+
+    const totalJobs = jobs.length;
+
+    const totalApplications =
+        applications.length;
+
+    const shortlistedApplications =
+        applications.filter(
+            (application) =>
+                application.status === "SHORTLISTED"
+        ).length;
+
+    const rejectedApplications =
+        applications.filter(
+            (application) =>
+                application.status === "REJECTED"
+        ).length;
+
+    const pendingApplications =
+        applications.filter(
+            (application) =>
+                application.status === "APPLIED"
+        ).length;
+
     if (loading) {
+
         return (
             <div>
-                <h2>Loading dashboard...</h2>
+                <h2>
+                    Loading candidate dashboard...
+                </h2>
             </div>
         );
     }
@@ -143,37 +212,141 @@ function CandidateDashboard() {
     return (
         <div>
 
+            {/* ================= HEADER ================= */}
+
             <header>
-                <h1>Candidate Dashboard</h1>
+
+                <h1>
+                    Candidate Dashboard
+                </h1>
 
                 <button onClick={logout}>
                     Logout
                 </button>
+
             </header>
 
             <hr />
 
+            {/* ================= ERROR ================= */}
+
+            {error && (
+
+                <div>
+
+                    <p>
+                        {error}
+                    </p>
+
+                    <button onClick={loadDashboard}>
+                        Try Again
+                    </button>
+
+                </div>
+            )}
+
+            {/* ================= OVERVIEW ================= */}
+
             <section>
 
-                <h2>Available Jobs</h2>
+                <h2>
+                    Application Overview
+                </h2>
+
+                <div>
+
+                    <div>
+                        <h3>
+                            {totalJobs}
+                        </h3>
+
+                        <p>
+                            Available Jobs
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3>
+                            {totalApplications}
+                        </h3>
+
+                        <p>
+                            Applications
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3>
+                            {pendingApplications}
+                        </h3>
+
+                        <p>
+                            Pending
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3>
+                            {shortlistedApplications}
+                        </h3>
+
+                        <p>
+                            Shortlisted
+                        </p>
+                    </div>
+
+                    <div>
+                        <h3>
+                            {rejectedApplications}
+                        </h3>
+
+                        <p>
+                            Rejected
+                        </p>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <hr />
+
+            {/* ================= AVAILABLE JOBS ================= */}
+
+            <section>
+
+                <h2>
+                    Available Jobs
+                </h2>
 
                 {jobs.length === 0 ? (
 
-                    <p>No jobs available.</p>
+                    <p>
+                        No jobs available.
+                    </p>
 
                 ) : (
 
                     jobs.map((job) => {
 
-                        const applied = hasApplied(job.id);
+                        const applied =
+                            hasApplied(job.id);
 
                         const applying =
                             applyingJobId === job.id;
 
+                        const application =
+                            getApplicationForJob(
+                                job.id
+                            );
+
                         return (
+
                             <div key={job.id}>
 
-                                <h3>{job.title}</h3>
+                                <h3>
+                                    {job.title}
+                                </h3>
 
                                 <p>
                                     {job.description}
@@ -194,20 +367,43 @@ function CandidateDashboard() {
                                     {job.salary} LPA
                                 </p>
 
+                                <p>
+                                    Job ID:{" "}
+                                    {job.id}
+                                </p>
+
+                                {applied && application && (
+
+                                    <p>
+                                        Application Status:{" "}
+                                        <strong>
+                                            {
+                                                application
+                                                    .status
+                                            }
+                                        </strong>
+                                    </p>
+
+                                )}
+
                                 <button
                                     onClick={() =>
-                                        applyForJob(job.id)
+                                        applyForJob(
+                                            job.id
+                                        )
                                     }
                                     disabled={
                                         applied ||
                                         applying
                                     }
                                 >
+
                                     {applied
                                         ? "✓ Applied"
                                         : applying
                                             ? "Applying..."
                                             : "Apply"}
+
                                 </button>
 
                             </div>
@@ -220,9 +416,13 @@ function CandidateDashboard() {
 
             <hr />
 
+            {/* ================= MY APPLICATIONS ================= */}
+
             <section>
 
-                <h2>My Applications</h2>
+                <h2>
+                    My Applications
+                </h2>
 
                 {applications.length === 0 ? (
 
@@ -232,28 +432,63 @@ function CandidateDashboard() {
 
                 ) : (
 
-                    applications.map((application) => (
+                    applications.map(
+                        (application) => (
 
-                        <div key={application.id}>
+                            <div
+                                key={
+                                    application.id
+                                }
+                            >
 
-                            <p>
-                                Application ID:{" "}
-                                {application.id}
-                            </p>
+                                <h3>
+                                    {
+                                        application
+                                            .jobTitle
+                                    }
+                                </h3>
 
-                            <p>
-                                Job ID:{" "}
-                                {application.jobId}
-                            </p>
+                                <p>
+                                    Job ID:{" "}
+                                    {
+                                        application.jobId
+                                    }
+                                </p>
 
-                            <strong>
-                                Status:{" "}
-                                {application.status}
-                            </strong>
+                                <p>
+                                    Application ID:{" "}
+                                    {
+                                        application.id
+                                    }
+                                </p>
 
-                        </div>
+                                <p>
+                                    Candidate:{" "}
+                                    {
+                                        application
+                                            .candidateName
+                                    }
+                                </p>
 
-                    ))
+                                <p>
+                                    Email:{" "}
+                                    {
+                                        application
+                                            .candidateEmail
+                                    }
+                                </p>
+
+                                <strong>
+                                    Status:{" "}
+                                    {
+                                        application.status
+                                    }
+                                </strong>
+
+                            </div>
+
+                        )
+                    )
 
                 )}
 
