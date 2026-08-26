@@ -7,8 +7,18 @@ function RecruiterDashboard() {
 
     const [jobs, setJobs] = useState([]);
     const [applications, setApplications] = useState([]);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
+    // Create job form
+    const [jobTitle, setJobTitle] = useState("");
+    const [jobDescription, setJobDescription] = useState("");
+    const [jobLocation, setJobLocation] = useState("");
+    const [jobEmploymentType, setJobEmploymentType] =
+        useState("FULL_TIME");
+    const [jobSalary, setJobSalary] = useState("");
+    const [creatingJob, setCreatingJob] = useState(false);
 
     useEffect(() => {
         loadDashboard();
@@ -38,12 +48,15 @@ function RecruiterDashboard() {
             );
 
             if (!jobsResponse.ok) {
-                throw new Error("Failed to load your jobs");
+                throw new Error(
+                    "Failed to load your jobs"
+                );
             }
 
-            const jobsData = await jobsResponse.json();
+            const jobsData =
+                await jobsResponse.json();
 
-            // Load recruiter's applicants
+            // Load recruiter's applications
             const applicationsResponse = await fetch(
                 "http://localhost:8080/applications/recruiter",
                 {
@@ -81,6 +94,87 @@ function RecruiterDashboard() {
         }
     };
 
+    const createJob = async (e) => {
+
+        e.preventDefault();
+
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+
+        try {
+
+            setCreatingJob(true);
+
+            const response = await fetch(
+                "http://localhost:8080/jobs",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+
+                    body: JSON.stringify({
+                        title: jobTitle,
+                        description: jobDescription,
+                        location: jobLocation,
+                        employmentType: jobEmploymentType,
+                        salary: Number(jobSalary)
+                    })
+                }
+            );
+
+            const responseText =
+                await response.text();
+
+            if (!response.ok) {
+
+                throw new Error(
+                    responseText ||
+                    "Failed to create job"
+                );
+            }
+
+            const createdJob =
+                JSON.parse(responseText);
+
+            // Add the newly created job
+            // to the dashboard immediately
+            setJobs((currentJobs) => [
+                ...currentJobs,
+                createdJob
+            ]);
+
+            // Reset form
+            setJobTitle("");
+            setJobDescription("");
+            setJobLocation("");
+            setJobEmploymentType("FULL_TIME");
+            setJobSalary("");
+
+            alert("Job created successfully!");
+
+        } catch (error) {
+
+            console.error(
+                "Create job error:",
+                error
+            );
+
+            alert(error.message);
+
+        } finally {
+
+            setCreatingJob(false);
+
+        }
+    };
+
     const updateApplicationStatus = async (
         applicationId,
         status
@@ -88,21 +182,29 @@ function RecruiterDashboard() {
 
         const token = localStorage.getItem("token");
 
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+
         try {
 
             const response = await fetch(
                 `http://localhost:8080/applications/${applicationId}/status?status=${status}`,
                 {
                     method: "PUT",
+
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 }
             );
 
-            const responseText = await response.text();
+            const responseText =
+                await response.text();
 
             if (!response.ok) {
+
                 throw new Error(
                     responseText ||
                     "Failed to update application"
@@ -112,13 +214,15 @@ function RecruiterDashboard() {
             const updatedApplication =
                 JSON.parse(responseText);
 
-            setApplications((currentApplications) =>
-                currentApplications.map(
-                    (application) =>
-                        application.id === applicationId
-                            ? updatedApplication
-                            : application
-                )
+            setApplications(
+                (currentApplications) =>
+                    currentApplications.map(
+                        (application) =>
+                            application.id ===
+                            applicationId
+                                ? updatedApplication
+                                : application
+                    )
             );
 
         } catch (error) {
@@ -143,7 +247,9 @@ function RecruiterDashboard() {
 
         return (
             <div>
-                <h2>Loading recruiter dashboard...</h2>
+                <h2>
+                    Loading recruiter dashboard...
+                </h2>
             </div>
         );
     }
@@ -151,9 +257,13 @@ function RecruiterDashboard() {
     return (
         <div>
 
+            {/* Header */}
+
             <header>
 
-                <h1>Recruiter Dashboard</h1>
+                <h1>
+                    Recruiter Dashboard
+                </h1>
 
                 <button onClick={logout}>
                     Logout
@@ -163,19 +273,192 @@ function RecruiterDashboard() {
 
             <hr />
 
+            {/* Error */}
+
             {error && (
+
                 <div>
-                    <p>{error}</p>
+
+                    <p>
+                        {error}
+                    </p>
 
                     <button onClick={loadDashboard}>
                         Try Again
                     </button>
+
                 </div>
             )}
 
+            {/* Create Job */}
+
             <section>
 
-                <h2>My Jobs</h2>
+                <h2>
+                    Create New Job
+                </h2>
+
+                <form onSubmit={createJob}>
+
+                    <div>
+
+                        <label>
+                            Job Title
+                        </label>
+
+                        <br />
+
+                        <input
+                            type="text"
+                            value={jobTitle}
+                            onChange={(e) =>
+                                setJobTitle(
+                                    e.target.value
+                                )
+                            }
+                            placeholder="e.g. Java Backend Developer"
+                            required
+                        />
+
+                    </div>
+
+                    <br />
+
+                    <div>
+
+                        <label>
+                            Description
+                        </label>
+
+                        <br />
+
+                        <textarea
+                            value={jobDescription}
+                            onChange={(e) =>
+                                setJobDescription(
+                                    e.target.value
+                                )
+                            }
+                            placeholder="Describe the job..."
+                            rows="4"
+                            required
+                        />
+
+                    </div>
+
+                    <br />
+
+                    <div>
+
+                        <label>
+                            Location
+                        </label>
+
+                        <br />
+
+                        <input
+                            type="text"
+                            value={jobLocation}
+                            onChange={(e) =>
+                                setJobLocation(
+                                    e.target.value
+                                )
+                            }
+                            placeholder="e.g. Bengaluru"
+                            required
+                        />
+
+                    </div>
+
+                    <br />
+
+                    <div>
+
+                        <label>
+                            Employment Type
+                        </label>
+
+                        <br />
+
+                        <select
+                            value={jobEmploymentType}
+                            onChange={(e) =>
+                                setJobEmploymentType(
+                                    e.target.value
+                                )
+                            }
+                        >
+
+                            <option value="FULL_TIME">
+                                FULL_TIME
+                            </option>
+
+                            <option value="PART_TIME">
+                                PART_TIME
+                            </option>
+
+                            <option value="CONTRACT">
+                                CONTRACT
+                            </option>
+
+                            <option value="INTERNSHIP">
+                                INTERNSHIP
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <br />
+
+                    <div>
+
+                        <label>
+                            Salary (LPA)
+                        </label>
+
+                        <br />
+
+                        <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            value={jobSalary}
+                            onChange={(e) =>
+                                setJobSalary(
+                                    e.target.value
+                                )
+                            }
+                            placeholder="e.g. 7.5"
+                            required
+                        />
+
+                    </div>
+
+                    <br />
+
+                    <button
+                        type="submit"
+                        disabled={creatingJob}
+                    >
+                        {creatingJob
+                            ? "Creating..."
+                            : "Create Job"}
+                    </button>
+
+                </form>
+
+            </section>
+
+            <hr />
+
+            {/* My Jobs */}
+
+            <section>
+
+                <h2>
+                    My Jobs
+                </h2>
 
                 {jobs.length === 0 ? (
 
@@ -189,14 +472,17 @@ function RecruiterDashboard() {
 
                         <div key={job.id}>
 
-                            <h3>{job.title}</h3>
+                            <h3>
+                                {job.title}
+                            </h3>
 
                             <p>
                                 {job.description}
                             </p>
 
                             <p>
-                                Location: {job.location}
+                                Location:{" "}
+                                {job.location}
                             </p>
 
                             <p>
@@ -205,26 +491,31 @@ function RecruiterDashboard() {
                             </p>
 
                             <p>
-                                Salary: {job.salary} LPA
+                                Salary:{" "}
+                                {job.salary} LPA
                             </p>
 
                             <p>
-                                Job ID: {job.id}
+                                Job ID:{" "}
+                                {job.id}
                             </p>
 
                         </div>
 
                     ))
-
                 )}
 
             </section>
 
             <hr />
 
+            {/* Applicants */}
+
             <section>
 
-                <h2>Applicants</h2>
+                <h2>
+                    Applicants
+                </h2>
 
                 {applications.length === 0 ? (
 
@@ -234,35 +525,56 @@ function RecruiterDashboard() {
 
                 ) : (
 
-                    applications.map((application) => (
+                    applications.map(
+                        (application) => (
 
-                        <div key={application.id}>
+                            <div
+                                key={
+                                    application.id
+                                }
+                            >
 
-                            <h3>
-                                {application.candidateName}
-                            </h3>
+                                <h3>
+                                    {
+                                        application
+                                            .candidateName
+                                    }
+                                </h3>
 
-                            <p>
-                                Email:{" "}
-                                {application.candidateEmail}
-                            </p>
+                                <p>
+                                    Email:{" "}
+                                    {
+                                        application
+                                            .candidateEmail
+                                    }
+                                </p>
 
-                            <p>
-                                Job:{" "}
-                                {application.jobTitle}
-                            </p>
+                                <p>
+                                    Job:{" "}
+                                    {
+                                        application
+                                            .jobTitle
+                                    }
+                                </p>
 
-                            <p>
-                                Application ID:{" "}
-                                {application.id}
-                            </p>
+                                <p>
+                                    Application ID:{" "}
+                                    {
+                                        application.id
+                                    }
+                                </p>
 
-                            <strong>
-                                Status:{" "}
-                                {application.status}
-                            </strong>
+                                <strong>
+                                    Status:{" "}
+                                    {
+                                        application.status
+                                    }
+                                </strong>
 
-                            <div>
+                                <br />
+                                <br />
+
+                                {/* Shortlist */}
 
                                 {application.status !==
                                     "SHORTLISTED" && (
@@ -279,6 +591,10 @@ function RecruiterDashboard() {
                                     </button>
 
                                 )}
+
+                                {" "}
+
+                                {/* Reject */}
 
                                 {application.status !==
                                     "REJECTED" && (
@@ -298,9 +614,8 @@ function RecruiterDashboard() {
 
                             </div>
 
-                        </div>
-
-                    ))
+                        )
+                    )
 
                 )}
 
