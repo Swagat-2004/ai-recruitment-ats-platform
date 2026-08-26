@@ -100,4 +100,15 @@ public class ApplicationController {
                 candidate.getId()
         );
     }
+
+    @GetMapping("/recruiter")
+public List<ApplicationResponse> getRecruiterApplications(
+        Authentication authentication) {
+
+    String recruiterEmail = authentication.getName();
+
+    return applicationService.getApplicationsByRecruiter(
+            recruiterEmail
+    );
+}
 }

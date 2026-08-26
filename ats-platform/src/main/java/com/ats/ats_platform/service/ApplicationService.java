@@ -6,8 +6,8 @@ import com.ats.ats_platform.entity.ApplicationStatus;
 import com.ats.ats_platform.entity.Job;
 import com.ats.ats_platform.entity.User;
 import com.ats.ats_platform.repository.ApplicationRepository;
-import org.springframework.stereotype.Service;
 import com.ats.ats_platform.exception.DuplicateApplicationException;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -31,9 +31,10 @@ public class ApplicationService {
                 );
 
         if (alreadyApplied) {
-                throw new DuplicateApplicationException(
-                "You have already applied for this job"
-                );
+
+            throw new DuplicateApplicationException(
+                    "You have already applied for this job"
+            );
         }
 
         Application application = new Application();
@@ -52,27 +53,7 @@ public class ApplicationService {
                 applicationRepository.findByJobId(jobId);
 
         return applications.stream()
-                .map(application -> {
-
-                    ApplicationResponse response =
-                            new ApplicationResponse();
-
-                    response.setId(application.getId());
-
-                    response.setCandidateId(
-                            application.getCandidate().getId()
-                    );
-
-                    response.setJobId(
-                            application.getJob().getId()
-                    );
-
-                    response.setStatus(
-                            application.getStatus().name()
-                    );
-
-                    return response;
-                })
+                .map(this::convertToResponse)
                 .toList();
     }
 
@@ -83,27 +64,20 @@ public class ApplicationService {
                 applicationRepository.findByCandidateId(candidateId);
 
         return applications.stream()
-                .map(application -> {
+                .map(this::convertToResponse)
+                .toList();
+    }
 
-                    ApplicationResponse response =
-                            new ApplicationResponse();
+    public List<ApplicationResponse> getApplicationsByRecruiter(
+            String recruiterEmail) {
 
-                    response.setId(application.getId());
+        List<Application> applications =
+                applicationRepository.findByJobRecruiterEmail(
+                        recruiterEmail
+                );
 
-                    response.setCandidateId(
-                            application.getCandidate().getId()
-                    );
-
-                    response.setJobId(
-                            application.getJob().getId()
-                    );
-
-                    response.setStatus(
-                            application.getStatus().name()
-                    );
-
-                    return response;
-                })
+        return applications.stream()
+                .map(this::convertToResponse)
                 .toList();
     }
 
@@ -123,21 +97,39 @@ public class ApplicationService {
         Application updatedApplication =
                 applicationRepository.save(application);
 
+        return convertToResponse(updatedApplication);
+    }
+
+    private ApplicationResponse convertToResponse(
+            Application application) {
+
         ApplicationResponse response =
                 new ApplicationResponse();
 
-        response.setId(updatedApplication.getId());
+        response.setId(application.getId());
 
         response.setCandidateId(
-                updatedApplication.getCandidate().getId()
+                application.getCandidate().getId()
+        );
+
+        response.setCandidateName(
+                application.getCandidate().getName()
+        );
+
+        response.setCandidateEmail(
+                application.getCandidate().getEmail()
         );
 
         response.setJobId(
-                updatedApplication.getJob().getId()
+                application.getJob().getId()
+        );
+
+        response.setJobTitle(
+                application.getJob().getTitle()
         );
 
         response.setStatus(
-                updatedApplication.getStatus().name()
+                application.getStatus().name()
         );
 
         return response;
