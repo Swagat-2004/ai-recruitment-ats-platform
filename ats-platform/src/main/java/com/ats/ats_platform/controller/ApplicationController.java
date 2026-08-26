@@ -57,8 +57,20 @@ public class ApplicationController {
                 application.getCandidate().getId()
         );
 
+        response.setCandidateName(
+                application.getCandidate().getName()
+        );
+
+        response.setCandidateEmail(
+                application.getCandidate().getEmail()
+        );
+
         response.setJobId(
                 application.getJob().getId()
+        );
+
+        response.setJobTitle(
+                application.getJob().getTitle()
         );
 
         response.setStatus(
@@ -78,11 +90,15 @@ public class ApplicationController {
     @PutMapping("/{applicationId}/status")
     public ApplicationResponse updateApplicationStatus(
             @PathVariable Long applicationId,
-            @RequestParam ApplicationStatus status) {
+            @RequestParam ApplicationStatus status,
+            Authentication authentication) {
+
+        String recruiterEmail = authentication.getName();
 
         return applicationService.updateApplicationStatus(
                 applicationId,
-                status
+                status,
+                recruiterEmail
         );
     }
 
@@ -102,13 +118,13 @@ public class ApplicationController {
     }
 
     @GetMapping("/recruiter")
-public List<ApplicationResponse> getRecruiterApplications(
-        Authentication authentication) {
+    public List<ApplicationResponse> getRecruiterApplications(
+            Authentication authentication) {
 
-    String recruiterEmail = authentication.getName();
+        String recruiterEmail = authentication.getName();
 
-    return applicationService.getApplicationsByRecruiter(
-            recruiterEmail
-    );
-}
+        return applicationService.getApplicationsByRecruiter(
+                recruiterEmail
+        );
+    }
 }

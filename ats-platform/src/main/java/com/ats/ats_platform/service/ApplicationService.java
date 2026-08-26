@@ -7,6 +7,7 @@ import com.ats.ats_platform.entity.Job;
 import com.ats.ats_platform.entity.User;
 import com.ats.ats_platform.repository.ApplicationRepository;
 import com.ats.ats_platform.exception.DuplicateApplicationException;
+import com.ats.ats_platform.exception.UnauthorizedApplicationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -83,7 +84,8 @@ public class ApplicationService {
 
     public ApplicationResponse updateApplicationStatus(
             Long applicationId,
-            ApplicationStatus status) {
+            ApplicationStatus status,
+            String recruiterEmail) {
 
         Application application =
                 applicationRepository.findById(applicationId)
@@ -91,6 +93,18 @@ public class ApplicationService {
                                 new RuntimeException(
                                         "Application not found"
                                 ));
+
+        String applicationRecruiterEmail =
+                application.getJob()
+                        .getRecruiter()
+                        .getEmail();
+
+        if (!applicationRecruiterEmail.equals(recruiterEmail)) {
+
+            throw new UnauthorizedApplicationException(
+                    "You are not authorized to update this application"
+            );
+        }
 
         application.setStatus(status);
 

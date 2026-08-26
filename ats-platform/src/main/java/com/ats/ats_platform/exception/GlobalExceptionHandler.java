@@ -16,10 +16,10 @@ public class GlobalExceptionHandler {
         return ex.getMessage();
     }
 
-    @ExceptionHandler(DuplicateApplicationException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public String handleDuplicateApplication(
-            DuplicateApplicationException ex) {
+    @ExceptionHandler(UnauthorizedApplicationException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleUnauthorizedApplication(
+            UnauthorizedApplicationException ex) {
 
         return ex.getMessage();
     }
