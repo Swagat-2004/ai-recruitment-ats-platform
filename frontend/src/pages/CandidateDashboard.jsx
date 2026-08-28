@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL =
+    import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 function CandidateDashboard() {
 
     const navigate = useNavigate();
@@ -31,7 +34,7 @@ function CandidateDashboard() {
 
             // Get available jobs
             const jobsResponse = await fetch(
-                "http://localhost:8080/jobs",
+                `${API_BASE_URL}/jobs`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -50,7 +53,7 @@ function CandidateDashboard() {
 
             // Get candidate applications
             const applicationsResponse = await fetch(
-                "http://localhost:8080/applications/my",
+                `${API_BASE_URL}/applications/my`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -124,7 +127,7 @@ function CandidateDashboard() {
         try {
 
             const response = await fetch(
-                `http://localhost:8080/applications?jobId=${jobId}`,
+                `${API_BASE_URL}/applications?jobId=${jobId}`,
                 {
                     method: "POST",
 

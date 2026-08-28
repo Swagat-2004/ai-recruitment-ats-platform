@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE_URL =
+    import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 function RecruiterDashboard() {
 
     const navigate = useNavigate();
@@ -24,30 +27,64 @@ function RecruiterDashboard() {
         loadDashboard();
     }, []);
 
-    const loadDashboard = async () => {
-
+    const getToken = () => {
         const token = localStorage.getItem("token");
 
         if (!token) {
             navigate("/login");
+            return null;
+        }
+
+        return token;
+    };
+
+    const loadDashboard = async () => {
+
+        const token = getToken();
+
+        if (!token) {
             return;
         }
 
         try {
 
+            setLoading(true);
             setError("");
 
-            // Load recruiter's jobs
+            console.log(
+                "API Base URL:",
+                API_BASE_URL
+            );
+
+            // =========================
+            // LOAD MY JOBS
+            // =========================
+
             const jobsResponse = await fetch(
-                "http://localhost:8080/jobs/my",
+                `${API_BASE_URL}/jobs/my`,
                 {
+                    method: "GET",
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 }
             );
 
+            console.log(
+                "Jobs response:",
+                jobsResponse.status
+            );
+
+            if (jobsResponse.status === 401 ||
+                jobsResponse.status === 403) {
+
+                throw new Error(
+                    `Unable to access recruiter jobs (${jobsResponse.status})`
+                );
+            }
+
             if (!jobsResponse.ok) {
+
                 throw new Error(
                     "Failed to load your jobs"
                 );
@@ -56,17 +93,39 @@ function RecruiterDashboard() {
             const jobsData =
                 await jobsResponse.json();
 
-            // Load recruiter's applications
-            const applicationsResponse = await fetch(
-                "http://localhost:8080/applications/recruiter",
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
+            // =========================
+            // LOAD MY APPLICATIONS
+            // =========================
+
+            const applicationsResponse =
+                await fetch(
+                    `${API_BASE_URL}/applications/recruiter`,
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`
+                        }
                     }
-                }
+                );
+
+            console.log(
+                "Applications response:",
+                applicationsResponse.status
             );
 
+            if (
+                applicationsResponse.status === 401 ||
+                applicationsResponse.status === 403
+            ) {
+
+                throw new Error(
+                    `Unable to access recruiter applications (${applicationsResponse.status})`
+                );
+            }
+
             if (!applicationsResponse.ok) {
+
                 throw new Error(
                     "Failed to load applications"
                 );
@@ -74,6 +133,16 @@ function RecruiterDashboard() {
 
             const applicationsData =
                 await applicationsResponse.json();
+
+            console.log(
+                "My jobs:",
+                jobsData
+            );
+
+            console.log(
+                "My applications:",
+                applicationsData
+            );
 
             setJobs(jobsData);
             setApplications(applicationsData);
@@ -90,19 +159,20 @@ function RecruiterDashboard() {
         } finally {
 
             setLoading(false);
-
         }
     };
 
-    // Create Job
+    // =========================
+    // CREATE JOB
+    // =========================
+
     const createJob = async (e) => {
 
         e.preventDefault();
 
-        const token = localStorage.getItem("token");
+        const token = getToken();
 
         if (!token) {
-            navigate("/login");
             return;
         }
 
@@ -111,7 +181,7 @@ function RecruiterDashboard() {
             setCreatingJob(true);
 
             const response = await fetch(
-                "http://localhost:8080/jobs",
+                `${API_BASE_URL}/jobs`,
                 {
                     method: "POST",
 
@@ -124,7 +194,8 @@ function RecruiterDashboard() {
                         title: jobTitle,
                         description: jobDescription,
                         location: jobLocation,
-                        employmentType: jobEmploymentType,
+                        employmentType:
+                            jobEmploymentType,
                         salary: Number(jobSalary)
                     })
                 }
@@ -149,14 +220,15 @@ function RecruiterDashboard() {
                 createdJob
             ]);
 
-            // Reset form
             setJobTitle("");
             setJobDescription("");
             setJobLocation("");
             setJobEmploymentType("FULL_TIME");
             setJobSalary("");
 
-            alert("Job created successfully!");
+            alert(
+                "Job created successfully!"
+            );
 
         } catch (error) {
 
@@ -170,32 +242,34 @@ function RecruiterDashboard() {
         } finally {
 
             setCreatingJob(false);
-
         }
     };
 
-    // Update application status
+    // =========================
+    // UPDATE APPLICATION STATUS
+    // =========================
+
     const updateApplicationStatus = async (
         applicationId,
         status
     ) => {
 
-        const token = localStorage.getItem("token");
+        const token = getToken();
 
         if (!token) {
-            navigate("/login");
             return;
         }
 
         try {
 
             const response = await fetch(
-                `http://localhost:8080/applications/${applicationId}/status?status=${status}`,
+                `${API_BASE_URL}/applications/${applicationId}/status?status=${status}`,
                 {
                     method: "PUT",
 
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization:
+                            `Bearer ${token}`
                     }
                 }
             );
@@ -218,7 +292,8 @@ function RecruiterDashboard() {
                 (currentApplications) =>
                     currentApplications.map(
                         (application) =>
-                            application.id === applicationId
+                            application.id ===
+                            applicationId
                                 ? updatedApplication
                                 : application
                     )
@@ -235,6 +310,10 @@ function RecruiterDashboard() {
         }
     };
 
+    // =========================
+    // LOGOUT
+    // =========================
+
     const logout = () => {
 
         localStorage.removeItem("token");
@@ -242,8 +321,12 @@ function RecruiterDashboard() {
         navigate("/login");
     };
 
-    // Dashboard statistics
-    const totalJobs = jobs.length;
+    // =========================
+    // STATISTICS
+    // =========================
+
+    const totalJobs =
+        jobs.length;
 
     const totalApplicants =
         applications.length;
@@ -251,20 +334,27 @@ function RecruiterDashboard() {
     const shortlistedApplicants =
         applications.filter(
             (application) =>
-                application.status === "SHORTLISTED"
+                application.status ===
+                "SHORTLISTED"
         ).length;
 
     const rejectedApplicants =
         applications.filter(
             (application) =>
-                application.status === "REJECTED"
+                application.status ===
+                "REJECTED"
         ).length;
 
     const pendingApplicants =
         applications.filter(
             (application) =>
-                application.status === "APPLIED"
+                application.status ===
+                "APPLIED"
         ).length;
+
+    // =========================
+    // LOADING
+    // =========================
 
     if (loading) {
 
@@ -280,7 +370,7 @@ function RecruiterDashboard() {
     return (
         <div>
 
-            {/* ================= HEADER ================= */}
+            {/* HEADER */}
 
             <header>
 
@@ -296,24 +386,30 @@ function RecruiterDashboard() {
 
             <hr />
 
-            {/* ================= ERROR ================= */}
+            {/* ERROR */}
 
             {error && (
 
                 <div>
 
+                    <h3>
+                        Dashboard Error
+                    </h3>
+
                     <p>
                         {error}
                     </p>
 
-                    <button onClick={loadDashboard}>
+                    <button
+                        onClick={loadDashboard}
+                    >
                         Try Again
                     </button>
 
                 </div>
             )}
 
-            {/* ================= DASHBOARD OVERVIEW ================= */}
+            {/* DASHBOARD OVERVIEW */}
 
             <section>
 
@@ -379,7 +475,7 @@ function RecruiterDashboard() {
 
             <hr />
 
-            {/* ================= CREATE JOB ================= */}
+            {/* CREATE JOB */}
 
             <section>
 
@@ -541,7 +637,7 @@ function RecruiterDashboard() {
 
             <hr />
 
-            {/* ================= MY JOBS ================= */}
+            {/* MY JOBS */}
 
             <section>
 
@@ -552,7 +648,8 @@ function RecruiterDashboard() {
                 {jobs.length === 0 ? (
 
                     <p>
-                        You haven't created any jobs yet.
+                        You haven't created any
+                        jobs yet.
                     </p>
 
                 ) : (
@@ -598,7 +695,7 @@ function RecruiterDashboard() {
 
             <hr />
 
-            {/* ================= APPLICANTS ================= */}
+            {/* APPLICANTS */}
 
             <section>
 
@@ -663,8 +760,6 @@ function RecruiterDashboard() {
                                 <br />
                                 <br />
 
-                                {/* Shortlist */}
-
                                 {application.status !==
                                     "SHORTLISTED" && (
 
@@ -682,8 +777,6 @@ function RecruiterDashboard() {
                                 )}
 
                                 {" "}
-
-                                {/* Reject */}
 
                                 {application.status !==
                                     "REJECTED" && (
@@ -705,7 +798,6 @@ function RecruiterDashboard() {
 
                         )
                     )
-
                 )}
 
             </section>
